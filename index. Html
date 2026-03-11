@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parvez Bio v3 PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+body{
+  background:linear-gradient(135deg,#004d00,#006600);
+  color:white;
+  display:flex;
+  justify-content:center;
+  padding:30px;
+  min-height:100vh;
+}
+.container{
+  max-width:420px;
+  width:100%;
+  backdrop-filter: blur(15px);
+  background: rgba(0,128,0,0.3);
+  border-radius:20px;
+  padding:30px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,255,0,0.3);
+}
+.profile img{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  border:4px solid #00ff00;
+  object-fit:cover;
+}
+.name{font-size:26px;margin-top:10px;font-weight:600;}
+.bio{opacity:.8;margin-bottom:25px;}
+.links a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: rgba(0,100,0,0.6);
+  margin:12px 0;
+  padding:12px;
+  border-radius:14px;
+  text-decoration:none;
+  color:white;
+  font-weight:500;
+  transition:.25s;
+}
+.links a:hover{transform:scale(1.05);background: rgba(0,150,0,0.7);}
+.adminToggle{margin-top:20px;font-size:14px;opacity:.8;cursor:pointer;}
+.panel{display:none;margin-top:20px;background: rgba(0,50,0,0.6);padding:15px;border-radius:12px;}
+input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;}
+button{width:100%;padding:12px;border:none;border-radius:10px;background:#00ff00;color:#004d00;font-weight:600;cursor:pointer;margin-top:5px;transition:.2s;}
+button:hover{background:#00cc00;}
+.small{background:#33ff33;margin-top:8px;}
+.editBtns button{width:48%;margin:5px 1%;padding:8px;font-size:12px;background:#33ff33;color:#004d00;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="profile">
+<img id="profileImg" src="https://i.imgur.com/2DhmtJ4.png">
+<div class="name" id="name">Gaming Parvez</div>
+<div class="bio" id="bio">Free Fire Player</div>
+</div>
+
+<div class="links" id="links"></div>
+
+<div class="adminToggle" onclick="openLogin()">⚙️ Admin</div>
+
+<div class="panel" id="loginPanel">
+<h3>Admin Login</h3>
+<input id="pass" placeholder="Enter password">
+<button onclick="login()">Login</button>
+</div>
+
+<div class="panel" id="adminPanel">
+<h3>Edit Profile</h3>
+<input id="newName" placeholder="Name">
+<input id="newBio" placeholder="Bio">
+
+<label style="display:block;margin-top:8px;">Upload Profile Image</label>
+<input type="file" id="uploadImg" accept="image/*">
+<button onclick="uploadProfileImage()">Upload Image</button>
+
+<button onclick="updateProfile()">Update</button>
+
+<h3 style="margin-top:20px">Add Link</h3>
+<input id="title" placeholder="Button Name">
+<input id="url" placeholder="Button URL">
+<button onclick="addLink()">Add</button>
+
+<button class="small" onclick="saveData()">Save All</button>
+</div>
+
+</div>
+
+<script>
+const ADMIN_PASS = "1234";
+
+let data = JSON.parse(localStorage.getItem("bioData")) || {
+  name:"Gaming Parvez",
+  bio:"Free Fire Player",
+  img:"https://i.imgur.com/2DhmtJ4.png",
+  links:[
+    {title:"YouTube",url:"#"},
+    {title:"Facebook",url:"#"},
+    {title:"Instagram",url:"#"}
+  ]
+};
+
+function getIcon(url){
+  url = url.toLowerCase();
+  if(url.includes("youtube")) return '<i class="fab fa-youtube"></i>';
+  if(url.includes("tiktok")) return '<i class="fab fa-tiktok"></i>';
+  if(url.includes("facebook")) return '<i class="fab fa-facebook"></i>';
+  if(url.includes("instagram")) return '<i class="fab fa-instagram"></i>';
+  if(url.includes("wa.me") || url.includes("whatsapp")) return '<i class="fab fa-whatsapp"></i>';
+  return '<i class="fas fa-link"></i>';
+}
+
+function render(){
+  document.getElementById("name").innerText = data.name;
+  document.getElementById("bio").innerText = data.bio;
+  document.getElementById("profileImg").src = data.img;
+
+  const container = document.getElementById("links");
+  container.innerHTML = "";
+
+  data.links.forEach((l, idx)=>{
+    const a = document.createElement("a");
+    a.href = l.url;
+    a.innerHTML = getIcon(l.url)+' '+l.title;
+    a.target="_blank";
+
+    if(document.getElementById("adminPanel").style.display==="block"){
+      const editDiv = document.createElement("div");
+      editDiv.classList.add("editBtns");
+
+      const editBtn = document.createElement("button");
+      editBtn.innerText="Edit";
+      editBtn.onclick=()=>{
+        const newTitle = prompt("New Title", l.title);
+        const newUrl = prompt("New URL", l.url);
+        if(newTitle && newUrl){
+          data.links[idx]={title:newTitle,url:newUrl};
+          render();
+        }
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.innerText="Delete";
+      delBtn.onclick=()=>{
+        if(confirm("Are you sure to delete?")){
+          data.links.splice(idx,1);
+          render();
+        }
+      };
+
+      editDiv.appendChild(editBtn);
+      editDiv.appendChild(delBtn);
+      a.appendChild(editDiv);
+    }
+
+    container.appendChild(a);
+  });
+}
+
+function openLogin(){document.getElementById("loginPanel").style.display="block";}
+function login(){
+  const p=document.getElementById("pass").value;
+  if(p===ADMIN_PASS){
+    document.getElementById("loginPanel").style.display="none";
+    document.getElementById("adminPanel").style.display="block";
+    render();
+  }else alert("Wrong password");
+}
+
+function updateProfile(){
+  data.name=document.getElementById("newName").value || data.name;
+  data.bio=document.getElementById("newBio").value || data.bio;
+  render();
+}
+
+function addLink(){
+  const t=document.getElementById("title").value;
+  const u=document.getElementById("url").value;
+  if(!t||!u) return;
+  data.links.push({title:t,url:u});
+  render();
+}
+
+function saveData(){localStorage.setItem("bioData",JSON.stringify(data));alert("Saved!");}
+
+function uploadProfileImage(){
+  const file = document.getElementById("uploadImg").files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      data.img = e.target.result;
+      render();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
